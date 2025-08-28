@@ -13,7 +13,7 @@
   <link rel="icon" href="logo.jpg" type="image/jpeg">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Hotfixes solicitados -->
+  <!-- Hotfixes + ajustes solicitados -->
   <style>
     /* 1) Ocultar puntos azules de la línea de tiempo */
     .timeline .marks{ display:none !important; }
@@ -21,13 +21,15 @@
     /* 2) Mensaje cuando no hay filas en la tabla (por ejemplo al elegir un día sin eventos) */
     .tablewrap:has(tbody:empty)::after{
       content: "No hay eventos hoy.";
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      color: var(--muted);
-      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px; color: var(--muted); font-size: 14px;
     }
+
+    /* 3) Hacer más pequeño el texto del KPI del día y de la próxima fecha */
+    .kpis .k:nth-child(2) .v{ font-size:18px; line-height:1.1; }
+    .kpis .k:nth-child(3) .v{ font-size:18px; line-height:1.1; }
+    /* Para evitar desbordes en títulos largos de día/fecha */
+    .k .v{ word-break:break-word; overflow-wrap:anywhere; }
   </style>
 </head>
 <body>
@@ -124,16 +126,16 @@
       <!-- Filtros -->
       <div class="filters">
         <label class="sr-only" for="fCentro">Centro</label>
-        <select id="fCentro"></select>
+        <select id="fCentro" onchange="renderTabla();updateSummaryChips();"></select>
 
         <label class="sr-only" for="fDesde">Desde</label>
-        <input type="date" id="fDesde">
+        <input type="date" id="fDesde" onchange="renderTabla();updateSummaryChips();">
 
         <label class="sr-only" for="fHasta">Hasta</label>
-        <input type="date" id="fHasta">
+        <input type="date" id="fHasta" onchange="renderTabla();updateSummaryChips();">
 
         <label class="sr-only" for="fEstado">Estado</label>
-        <select id="fEstado">
+        <select id="fEstado" onchange="renderTabla();updateSummaryChips();">
           <option value="">Todos los estados</option>
           <option value="programado">Programado</option>
           <option value="confirmado">Confirmado</option>
@@ -141,14 +143,13 @@
         </select>
 
         <label class="sr-only" for="fArea">Área</label>
-        <select id="fArea">
+        <select id="fArea" onchange="renderTabla();updateSummaryChips();">
           <option value="">Todas las áreas</option>
         </select>
 
-        <button class="viewbtn" id="btnFiltrar">Filtrar</button>
+        <!-- Botón “Filtrar” eliminado -->
         <button class="viewbtn" id="btnLimpiar">Limpiar</button>
         <div class="spacer"></div>
-        <!-- Botones “Copiar semana” y “QR” eliminados -->
       </div>
 
       <!-- Resumen de filtros -->
