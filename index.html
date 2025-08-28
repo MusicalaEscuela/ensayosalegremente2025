@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cronograma de Ensayos – AlegreMente 2025</title>
+
+  <!-- Fuente moderna -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <link rel="icon" href="logo.jpg" type="image/jpeg">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Hotfixes solicitados -->
+  <style>
+    /* 1) Ocultar puntos azules de la línea de tiempo */
+    .timeline .marks{ display:none !important; }
+
+    /* 2) Mensaje cuando no hay filas en la tabla (por ejemplo al elegir un día sin eventos) */
+    .tablewrap:has(tbody:empty)::after{
+      content: "No hay eventos hoy.";
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="head wrap">
+      <img src="logo.jpg" alt="Logo Musicala" class="logo" onerror="this.style.display='none'">
+      <div>
+        <h1 class="h1">Cronograma de Ensayos – AlegreMente 2025</h1>
+        <div class="sub">Hoy es <span id="hoyHeader">—</span>. No hay ensayos previos registrados.</div>
+      </div>
+      <div class="spacer"></div>
+      <button id="btnPrint" class="iconbtn" title="Imprimir">
+        <span class="icon">🖨️</span> Imprimir
+      </button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Columna izquierda: Fechas clave -->
+    <section class="card">
+      <h2 class="title"><span class="dot dot-brand"></span>Fechas clave</h2>
+
+      <div class="toolbar">
+        <div class="chips">
+          <span class="chip info">Obra: <b id="obraFechaTxt">—</b></span>
+          <span class="chip ok">Ensayos confirmados: <b id="countConfirmados">0</b></span>
+          <span class="chip warn">Pendientes: <b id="countPendientes">0</b></span>
+        </div>
+        <div class="spacer"></div>
+      </div>
+
+      <!-- KPIs con progress ring -->
+      <div class="kpis">
+        <div class="k ring">
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <path d="M18 2 a 16 16 0 1 1 0 32 a 16 16 0 1 1 0 -32" fill="none" stroke="#e5e7eb" stroke-width="4"/>
+            <path id="ringProgress" d="M18 2 a 16 16 0 1 1 0 32 a 16 16 0 1 1 0 -32" fill="none" stroke="#a5b4fc" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 100"/>
+          </svg>
+          <div>
+            <div class="v" id="kFaltan">—</div>
+            <div class="l">Días para la obra</div>
+          </div>
+        </div>
+        <div class="k">
+          <div class="v" id="kObraDOW">—</div>
+          <div class="l">Día de la semana</div>
+        </div>
+        <div class="k">
+          <div class="v" id="kProximo">—</div>
+          <div class="l">Próxima fecha</div>
+        </div>
+      </div>
+
+      <!-- Línea de tiempo -->
+      <div class="timeline">
+        <div class="line"></div>
+        <div class="marks" id="marks"></div>
+        <div class="labelrow">
+          <span id="lblStart">Hoy</span><span id="lblEnd">Obra</span>
+        </div>
+      </div>
+
+      <!-- Lista -->
+      <div class="list" id="listaFechas"></div>
+
+      <!-- Mini calendario -->
+      <div class="mini-cal">
+        <div class="cal-head">
+          <button class="viewbtn" id="calPrev">◀</button>
+          <div><b id="calTitle">—</b></div>
+          <button class="viewbtn" id="calNext">▶</button>
+        </div>
+        <div class="cal-grid" id="calDows"></div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+
+      <div class="legend">
+        <span class="pill info">programado</span>
+        <span class="pill ok">confirmado</span>
+        <span class="pill warn">pendiente</span>
+      </div>
+
+      <div class="foot">Hoy es <span id="hoyTxt">—</span>.</div>
+    </section>
+
+    <!-- Columna derecha: Programación por centros -->
+    <section class="card">
+      <h2 class="title"><span class="dot dot-alt"></span>Programación por Centros</h2>
+      <p class="sub">
+        Los ensayos se cargan automáticamente desde el archivo oficial en Google Sheets.
+      </p>
+
+      <!-- Filtros -->
+      <div class="filters">
+        <label class="sr-only" for="fCentro">Centro</label>
+        <select id="fCentro"></select>
+
+        <label class="sr-only" for="fDesde">Desde</label>
+        <input type="date" id="fDesde">
+
+        <label class="sr-only" for="fHasta">Hasta</label>
+        <input type="date" id="fHasta">
+
+        <label class="sr-only" for="fEstado">Estado</label>
+        <select id="fEstado">
+          <option value="">Todos los estados</option>
+          <option value="programado">Programado</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="pendiente">Pendiente</option>
+        </select>
+
+        <label class="sr-only" for="fArea">Área</label>
+        <select id="fArea">
+          <option value="">Todas las áreas</option>
+        </select>
+
+        <button class="viewbtn" id="btnFiltrar">Filtrar</button>
+        <button class="viewbtn" id="btnLimpiar">Limpiar</button>
+        <div class="spacer"></div>
+        <!-- Botones “Copiar semana” y “QR” eliminados -->
+      </div>
+
+      <!-- Resumen de filtros -->
+      <div class="summary" id="summaryChips"></div>
+
+      <!-- Solo tabla -->
+      <div class="tablewrap" id="viewTabla" role="region" aria-label="Tabla de programación">
+        <table>
+          <thead>
+            <tr>
+              <th>Centro</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Responsable</th>
+              <th>Asistentes</th>
+              <th>Estado</th>
+              <th>Jornada</th>
+              <th>Área</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyCentros"></tbody>
+        </table>
+      </div>
+      <!-- El mensaje de “No hay eventos hoy.” se pinta con CSS cuando el tbody está vacío -->
+    </section>
+  </main>
+
+  <!-- JS externo -->
+  <script src="script.js" defer></script>
+</body>
+</html>
