@@ -1,6 +1,6 @@
 /* ==========================================
    Cronograma de Ensayos – AlegreMente 2025
-   Lógica (script.js) — versión solo TABLA
+   Lógica (script.js) — versión auto-filtrado
    ========================================== */
 
 /* ---------- Configuración ---------- */
@@ -68,23 +68,19 @@ function normalizeDate(s){
     let a = parseInt(m[1],10);
     let b = parseInt(m[2],10);
     let y = parseInt(m[3],10);
-    // año 2 dígitos
     if (m[3].length === 2) y = (y < 50 ? 2000 + y : 1900 + y);
 
-    // decidir día/mes
     let day, month;
     if (a > 12 && b <= 12){ day = a; month = b; }
     else if (b > 12 && a <= 12){ day = b; month = a; }
-    else { // ambiguo => asumir dd/mm
-      day = a; month = b;
-    }
+    else { day = a; month = b; } // ambiguo => dd/mm
 
     const dd = String(day).padStart(2,'0');
     const mm = String(month).padStart(2,'0');
     return `${y}-${mm}-${dd}`;
   }
 
-  return t; // dejar tal cual si no coincide (el render lo marcará si es inválida)
+  return t; // dejar tal cual si no coincide
 }
 
 function joinHora(hora, hi, hf){
@@ -428,8 +424,15 @@ function toggleNoEventsMessage(show){
    Eventos UI
    ======================================================== */
 function wireUI(){
-  onClick('btnPrint',    ()=>window.print());
-  onClick('btnFiltrar', ()=>{ renderTabla(); updateSummaryChips(); });
+  onClick('btnPrint', ()=>window.print());
+
+  // Auto-filtrado: al cambiar cualquier filtro se renderiza de una vez
+  const auto = ()=>{ renderTabla(); updateSummaryChips(); };
+  ['fCentro','fDesde','fHasta','fEstado','fArea']
+    .map(id => byId(id))
+    .forEach(el => { if (el) el.addEventListener('change', auto); });
+
+  // Botón Limpiar (el único que queda en la barra)
   onClick('btnLimpiar', ()=>{ 
     setValue('fCentro',''); setValue('fDesde',''); setValue('fHasta',''); setValue('fEstado',''); setValue('fArea',''); 
     renderTabla(); updateSummaryChips(); 
