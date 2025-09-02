@@ -11,7 +11,7 @@ const TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS1NNboTYyyWcE0
 /* ---------- Fechas clave ---------- */
 const OBRA = { tipo:'obra', titulo:'Obra AlegreMente 2025', fecha:'2025-10-29', estado:'confirmado' };
 const FECHAS_CLAVE = [
-  { tipo:'ensayo', titulo:'Ensayo General 1', fecha:'2025-09-06', estado:'confirmado' },
+  { tipo:'ensayo', titulo:'Ensayo General 1', fecha:null, estado:'pendiente' },
   { tipo:'ensayo', titulo:'Ensayo General 2', fecha:'2025-10-18', estado:'confirmado' },
   { tipo:'ensayo', titulo:'Ensayo General 3', fecha:null,          estado:'pendiente' },
   OBRA
@@ -463,3 +463,4 @@ function setText(id, txt){ const el = byId(id); if (el) el.textContent = txt; }
 function setValue(id, val){ const el = byId(id); if (el) el.value = val; }
 function getValue(id){ const el = byId(id); return el ? el.value : ''; }
 function onClick(id, fn){ const el = byId(id); if (el) el.onclick = fn; }
+
