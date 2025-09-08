@@ -1,27 +1,43 @@
 /* ==========================================
    Cronograma de Ensayos – AlegreMente 2025
-   Lógica (script.js) — versión auto-filtrado
+   Lógica (script.js) — JSON -> TSV -> fallback
    ========================================== */
 
 /* ---------- Configuración ---------- */
-const TZ   = 'America/Bogota';
-const HOY  = '2025-08-28'; // “hoy” fijo (ajústalo si lo necesitas)
+const TZ = 'America/Bogota';
+
+// HOY dinámico en la zona de Bogotá (evita desfases de un día)
+function todayISO() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(new Date());
+  const y = parts.find(p => p.type === 'year').value;
+  const m = parts.find(p => p.type === 'month').value;
+  const d = parts.find(p => p.type === 'day').value;
+  return `${y}-${m}-${d}`;
+}
+const HOY = todayISO();
+
+// Fuente preferida: JSON local/servido
+const DATA_URL_JSON = 'data.json';
+
+// Respaldo: TSV publicado de Sheets
 const TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS1NNboTYyyWcE03e4GA8oz8y79DdeFlX1HNCMM1FbzG5LJon33IM87ReTKiJdYc41179gfRWYn0EsW/pub?gid=219655054&single=true&output=tsv';
 
-/* ---------- Fechas clave ---------- */
+/* ---------- Fechas clave (puedes editarlas aquí) ---------- */
 const OBRA = { tipo:'obra', titulo:'Obra AlegreMente 2025', fecha:'2025-10-29', estado:'confirmado' };
 const FECHAS_CLAVE = [
-  { tipo:'ensayo', titulo:'Ensayo General 1', fecha:null, estado:'pendiente' },
+  { tipo:'ensayo', titulo:'Ensayo General 1', fecha:'2025-09-06', estado:'confirmado' },
   { tipo:'ensayo', titulo:'Ensayo General 2', fecha:'2025-10-18', estado:'confirmado' },
   { tipo:'ensayo', titulo:'Ensayo General 3', fecha:null,          estado:'pendiente' },
   OBRA
 ];
 
-/* ---------- Datos base (fallback si falla la carga TSV) ---------- */
+/* ---------- Datos base (fallback si falla JSON/TSV) ---------- */
 let SCHEDULE = [
-  { centro:'Arroyo', fecha:'2025-09-10', hora:'14:00–16:00', responsable:'Erika López',  asistentes:['Juan P.','María L.','Sofía R.','Nicolás G.'], estado:'programado', jornada:'Tarde',  area:'Música' },
-  { centro:'Lucero', fecha:'2025-09-12', hora:'09:00–10:30', responsable:'S. Gutiérrez', asistentes:['Laura C.','Mateo Q.'],                      estado:'pendiente', jornada:'Mañana', area:'Danza' },
-  { centro:'Jerusalén', fecha:'2025-09-13', hora:'10:00–12:00', responsable:'T. Sarmiento', asistentes:['Samuel D.','Valentina H.','Kevin T.'],   estado:'confirmado', jornada:'Mañana', area:'Teatro' },
+  { centro:'Arroyo',   fecha:'2025-09-10', hora:'14:00–16:00', responsable:'Erika López',  asistentes:['Juan P.','María L.','Sofía R.','Nicolás G.'], estado:'programado', jornada:'Tarde',  area:'Música' },
+  { centro:'Lucero',   fecha:'2025-09-12', hora:'09:00–10:30', responsable:'S. Gutiérrez', asistentes:['Laura C.','Mateo Q.'],                      estado:'pendiente', jornada:'Mañana', area:'Danza' },
+  { centro:'Jerusalén',fecha:'2025-09-13', hora:'10:00–12:00', responsable:'T. Sarmiento', asistentes:['Samuel D.','Valentina H.','Kevin T.'],       estado:'confirmado', jornada:'Mañana', area:'Teatro' },
 ];
 
 /* ---------- Paleta por centro ---------- */
@@ -45,16 +61,7 @@ const diffDays = (fromIso, toIso) => {
   return Math.round((b - a) / (1000*60*60*24));
 };
 
-/* ---- Normalización robusta de fechas ----
-   Acepta:
-   - yyyy-mm-dd
-   - dd/mm/yyyy, mm/dd/yyyy
-   - dd/mm/yy,   mm/dd/yy  (2 dígitos de año)
-   Reglas:
-   - Si ambos (día y mes) <= 12 => asumimos formato español dd/mm.
-   - Si uno > 12, ese es el día; el otro es el mes.
-   - Año de 2 dígitos: <50 -> 2000+yy, ≥50 -> 1900+yy.
-*/
+// Normalización robusta de fechas con tolerancia a dd/mm/yy, mm/dd/yyyy, etc.
 function normalizeDate(s){
   if (!s) return '';
   const t = (s+'').trim();
@@ -79,7 +86,6 @@ function normalizeDate(s){
     const mm = String(month).padStart(2,'0');
     return `${y}-${mm}-${dd}`;
   }
-
   return t; // dejar tal cual si no coincide
 }
 
@@ -144,7 +150,7 @@ function renderFechasClave(){
 
   const list = byId('listaFechas'); list.innerHTML = '';
   arr.forEach(f=>{
-    const faltan = diffDays(HOY, f.fecha);
+    const faltan = f.fecha ? diffDays(HOY, f.fecha) : null;
     const ribbonCls = f.estado==='pendiente' ? 'pending' : '';
     const icon = f.tipo === 'obra' ? '🎭' : '🎬';
     const el = document.createElement('div');
@@ -159,7 +165,7 @@ function renderFechasClave(){
           ${
             f.fecha
               ? (f.fecha >= HOY
-                  ? `<span class="tag">faltan ${faltan} días</span>`
+                  ? `<span class="tag">faltan ${faltan} días</span>` 
                   : `<span class="tag">pasó hace ${Math.abs(faltan)} días</span>`)
               : `<span class="tag">fecha pendiente</span>`
           }
@@ -235,8 +241,7 @@ function drawCalendar(){
 function calendarCell(dateObj, dim){
   const iso = dateObj.toISOString().slice(0,10);
   const cell = document.createElement('div');
-  cell.className = 'cal-cell' + (dim?' dim':'');
-  cell.textContent = dateObj.getDate();
+  cell.className = 'cal-cell' + (dim?' dim':''), cell.textContent = dateObj.getDate();
   if (FECHAS_CLAVE.some(f=>f.fecha===iso)) cell.classList.add('has');
   if (iso===HOY) cell.classList.add('active');
   cell.onclick = ()=>{
@@ -249,22 +254,55 @@ function calendarCell(dateObj, dim){
 }
 
 /* ========================================================
-   Carga automática del TSV
+   Carga de datos (JSON -> TSV -> fallback)
    ======================================================== */
-async function loadScheduleFromTSV(){
+async function loadSchedule(){
+  // 1) JSON (preferido)
+  try{
+    const r = await fetch(DATA_URL_JSON, {cache:'no-store'});
+    if (r.ok){
+      const json = await r.json();
+      const rows = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      const parsed = parseFromJSON(rows);
+      if (parsed.length){ SCHEDULE = parsed; return; }
+    }
+  }catch(e){ console.warn('No se pudo cargar data.json', e); }
+
+  // 2) TSV (respaldo)
   try{
     const resp = await fetch(TSV_URL, { cache: 'no-store' });
     const text = await resp.text();
     const rows = parseTSV(text);
-    if (rows && rows.length){
-      SCHEDULE = rows;
-    }
+    if (rows && rows.length){ SCHEDULE = rows; return; }
   }catch(e){
     console.warn('No se pudo cargar el TSV, usando datos base.', e);
   }
 }
 
-/* Parser TSV compatible con cabeceras equivalentes */
+// Adaptador JSON
+function parseFromJSON(rows){
+  const out = [];
+  for (const raw of rows){
+    if (!raw) continue;
+    const centro = (raw.centro ?? raw.sede ?? '').toString().trim();
+    const fecha  = normalizeDate(raw.fecha ?? raw.fecha_evento ?? raw.fechaevento ?? '');
+    const hora   = joinHora(raw.hora ?? '', raw.hora_inicio ?? '', raw.hora_fin ?? '');
+    const responsable = (raw.responsable ?? raw.docente ?? raw.lider ?? raw['líder'] ?? '').toString().trim();
+    const estado = normalizeEstado(raw.estado ?? raw.status ?? '');
+    const jornada= (raw.jornada ?? raw.turno ?? '').toString().trim();
+    const area   = (raw.area ?? raw['área'] ?? raw.categoria ?? raw['categoría'] ?? '').toString().trim();
+
+    let asistentes = [];
+    if (Array.isArray(raw.asistentes)) asistentes = raw.asistentes.map(s=>String(s).trim()).filter(Boolean);
+    else if (raw.asistentes) asistentes = String(raw.asistentes).split(/[;,]/).map(s=>s.trim()).filter(Boolean);
+
+    if (!centro && !fecha && !hora) continue; // fila vacía
+    out.push({ centro, fecha, hora, responsable, estado, jornada, area, asistentes });
+  }
+  return out;
+}
+
+// Parser TSV compatible con cabeceras variadas
 function parseTSV(text){
   const clean = (text||'').replace(/^\uFEFF/, '').trim();
   if (!clean) return null;
@@ -296,7 +334,7 @@ function parseTSV(text){
     const asistentesStr = (cols[iAsis]||'').trim();
     const asistentes = asistentesStr ? asistentesStr.split(/[;,]/).map(s=>s.trim()).filter(Boolean) : [];
 
-    if (!centro && !fecha && !hora) continue; // fila vacía
+    if (!centro && !fecha && !hora) continue;
     out.push({ centro, fecha, hora, responsable, estado, jornada, area, asistentes });
   }
   return out;
@@ -322,18 +360,26 @@ function hydrateFilters(){
   areas.forEach(a=>{ const o=document.createElement('option'); o.value=a; o.textContent=a; selArea.appendChild(o); });
 }
 
+// Filtra por defecto SOLO PRÓXIMOS (fecha >= HOY) + filtros UI
 function filteredRows(){
   const centro = getValue('fCentro') || '';
   const desde  = getValue('fDesde')  || '';
   const hasta  = getValue('fHasta')  || '';
   const estado = getValue('fEstado') || '';
   const area   = getValue('fArea')   || '';
+
   let rows = SCHEDULE.slice();
+
+  // 1) Solo próximos
+  rows = rows.filter(r => (r.fecha || '') >= HOY);
+
+  // 2) Filtros UI
   if (centro) rows = rows.filter(r=> r.centro === centro);
   if (estado) rows = rows.filter(r=> r.estado === estado);
   if (area)   rows = rows.filter(r=> (r.area||'') === area);
   if (desde)  rows = rows.filter(r=> (r.fecha||'') >= desde);
   if (hasta)  rows = rows.filter(r=> (r.fecha||'') <= hasta);
+
   rows.sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||'') || (a.centro||'').localeCompare(b.centro||''));
   return rows;
 }
@@ -432,7 +478,7 @@ function wireUI(){
     .map(id => byId(id))
     .forEach(el => { if (el) el.addEventListener('change', auto); });
 
-  // Botón Limpiar (el único que queda en la barra)
+  // Botón Limpiar (barra)
   onClick('btnLimpiar', ()=>{ 
     setValue('fCentro',''); setValue('fDesde',''); setValue('fHasta',''); setValue('fEstado',''); setValue('fArea',''); 
     renderTabla(); updateSummaryChips(); 
@@ -446,15 +492,21 @@ function wireUI(){
    Init
    ======================================================== */
 (async function init(){
-  await loadScheduleFromTSV();     // carga automática desde la hoja
+  // Carga de datos con preferencia JSON
+  await loadSchedule();
+
+  // Paleta por centro (pre-cálculo)
   Array.from(new Set(SCHEDULE.map(r=>r.centro))).forEach(colorFor);
 
+  // UI
   hydrateFilters();
   renderFechasClave();
   drawCalendar();
   renderTabla();
   updateSummaryChips();
   wireUI();
+
+  // “Hoy es …” en header y pie ya se renderiza dentro de renderFechasClave()
 })();
 
 /* ---------- Helpers DOM ---------- */
@@ -463,4 +515,3 @@ function setText(id, txt){ const el = byId(id); if (el) el.textContent = txt; }
 function setValue(id, val){ const el = byId(id); if (el) el.value = val; }
 function getValue(id){ const el = byId(id); return el ? el.value : ''; }
 function onClick(id, fn){ const el = byId(id); if (el) el.onclick = fn; }
-
