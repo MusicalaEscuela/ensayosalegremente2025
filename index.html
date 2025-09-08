@@ -13,7 +13,7 @@
   <link rel="icon" href="logo.jpg" type="image/jpeg">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Hotfixes + ajustes solicitados -->
+  <!-- Hotfixes + ajustes solicitados (se mantienen aquí para priorizarlos) -->
   <style>
     /* 1) Ocultar puntos azules de la línea de tiempo */
     .timeline .marks{ display:none !important; }
@@ -28,7 +28,7 @@
     /* 3) Hacer más pequeño el texto del KPI del día y de la próxima fecha */
     .kpis .k:nth-child(2) .v{ font-size:18px; line-height:1.1; }
     .kpis .k:nth-child(3) .v{ font-size:18px; line-height:1.1; }
-    /* Para evitar desbordes en títulos largos de día/fecha */
+    /* Evitar desbordes en títulos largos de día/fecha */
     .k .v{ word-break:break-word; overflow-wrap:anywhere; }
   </style>
 </head>
@@ -39,21 +39,23 @@
       <img src="logo.jpg" alt="Logo Musicala" class="logo" onerror="this.style.display='none'">
       <div>
         <h1 class="h1">Cronograma de Ensayos – AlegreMente 2025</h1>
-        <div class="sub">Hoy es <span id="hoyHeader">—</span>. No hay ensayos previos registrados.</div>
+        <div class="sub">
+          Hoy es <span id="hoyHeader" aria-live="polite">—</span>. No hay ensayos previos registrados.
+        </div>
       </div>
       <div class="spacer"></div>
       <button id="btnPrint" class="iconbtn" title="Imprimir">
-        <span class="icon">🖨️</span> Imprimir
+        <span class="icon" aria-hidden="true">🖨️</span> <span class="sr-only">Imprimir</span><span aria-hidden="true">Imprimir</span>
       </button>
     </div>
   </header>
 
   <main class="wrap">
     <!-- Columna izquierda: Fechas clave -->
-    <section class="card">
-      <h2 class="title"><span class="dot dot-brand"></span>Fechas clave</h2>
+    <section class="card" aria-labelledby="sec-fechas-clave">
+      <h2 id="sec-fechas-clave" class="title"><span class="dot dot-brand" aria-hidden="true"></span>Fechas clave</h2>
 
-      <div class="toolbar">
+      <div class="toolbar" role="group" aria-label="Resumen de estado">
         <div class="chips">
           <span class="chip info">Obra: <b id="obraFechaTxt">—</b></span>
           <span class="chip ok">Ensayos confirmados: <b id="countConfirmados">0</b></span>
@@ -63,29 +65,29 @@
       </div>
 
       <!-- KPIs con progress ring -->
-      <div class="kpis">
+      <div class="kpis" role="group" aria-label="Indicadores clave">
         <div class="k ring">
           <svg viewBox="0 0 36 36" aria-hidden="true">
             <path d="M18 2 a 16 16 0 1 1 0 32 a 16 16 0 1 1 0 -32" fill="none" stroke="#e5e7eb" stroke-width="4"/>
             <path id="ringProgress" d="M18 2 a 16 16 0 1 1 0 32 a 16 16 0 1 1 0 -32" fill="none" stroke="#a5b4fc" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 100"/>
           </svg>
           <div>
-            <div class="v" id="kFaltan">—</div>
+            <div class="v" id="kFaltan" aria-live="polite">—</div>
             <div class="l">Días para la obra</div>
           </div>
         </div>
         <div class="k">
-          <div class="v" id="kObraDOW">—</div>
+          <div class="v" id="kObraDOW" aria-live="polite">—</div>
           <div class="l">Día de la semana</div>
         </div>
         <div class="k">
-          <div class="v" id="kProximo">—</div>
+          <div class="v" id="kProximo" aria-live="polite">—</div>
           <div class="l">Próxima fecha</div>
         </div>
       </div>
 
       <!-- Línea de tiempo -->
-      <div class="timeline">
+      <div class="timeline" aria-hidden="true">
         <div class="line"></div>
         <div class="marks" id="marks"></div>
         <div class="labelrow">
@@ -93,49 +95,49 @@
         </div>
       </div>
 
-      <!-- Lista -->
-      <div class="list" id="listaFechas"></div>
+      <!-- Lista de fechas clave -->
+      <div class="list" id="listaFechas" aria-live="polite"></div>
 
       <!-- Mini calendario -->
-      <div class="mini-cal">
+      <div class="mini-cal" aria-labelledby="calTitle">
         <div class="cal-head">
-          <button class="viewbtn" id="calPrev">◀</button>
+          <button class="viewbtn" id="calPrev" aria-label="Mes anterior">◀</button>
           <div><b id="calTitle">—</b></div>
-          <button class="viewbtn" id="calNext">▶</button>
+          <button class="viewbtn" id="calNext" aria-label="Mes siguiente">▶</button>
         </div>
-        <div class="cal-grid" id="calDows"></div>
-        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-grid" id="calDows" aria-hidden="true"></div>
+        <div class="cal-grid" id="calGrid" role="grid" aria-label="Calendario mini"></div>
       </div>
 
-      <div class="legend">
+      <div class="legend" role="group" aria-label="Leyenda de estados">
         <span class="pill info">programado</span>
         <span class="pill ok">confirmado</span>
         <span class="pill warn">pendiente</span>
       </div>
 
-      <div class="foot">Hoy es <span id="hoyTxt">—</span>.</div>
+      <div class="foot">Hoy es <span id="hoyTxt" aria-live="polite">—</span>.</div>
     </section>
 
     <!-- Columna derecha: Programación por centros -->
-    <section class="card">
-      <h2 class="title"><span class="dot dot-alt"></span>Programación por Centros</h2>
+    <section class="card" aria-labelledby="sec-programacion">
+      <h2 id="sec-programacion" class="title"><span class="dot dot-alt" aria-hidden="true"></span>Programación por Centros</h2>
       <p class="sub">
         Los ensayos se cargan automáticamente desde el archivo oficial en Google Sheets.
       </p>
 
       <!-- Filtros -->
-      <div class="filters">
+      <div class="filters" role="group" aria-label="Filtros de búsqueda">
         <label class="sr-only" for="fCentro">Centro</label>
-        <select id="fCentro" onchange="renderTabla();updateSummaryChips();"></select>
+        <select id="fCentro" aria-label="Centro"></select>
 
         <label class="sr-only" for="fDesde">Desde</label>
-        <input type="date" id="fDesde" onchange="renderTabla();updateSummaryChips();">
+        <input type="date" id="fDesde" aria-label="Fecha desde">
 
         <label class="sr-only" for="fHasta">Hasta</label>
-        <input type="date" id="fHasta" onchange="renderTabla();updateSummaryChips();">
+        <input type="date" id="fHasta" aria-label="Fecha hasta">
 
         <label class="sr-only" for="fEstado">Estado</label>
-        <select id="fEstado" onchange="renderTabla();updateSummaryChips();">
+        <select id="fEstado" aria-label="Estado">
           <option value="">Todos los estados</option>
           <option value="programado">Programado</option>
           <option value="confirmado">Confirmado</option>
@@ -143,37 +145,36 @@
         </select>
 
         <label class="sr-only" for="fArea">Área</label>
-        <select id="fArea" onchange="renderTabla();updateSummaryChips();">
+        <select id="fArea" aria-label="Área">
           <option value="">Todas las áreas</option>
         </select>
 
-        <!-- Botón “Filtrar” eliminado -->
         <button class="viewbtn" id="btnLimpiar">Limpiar</button>
         <div class="spacer"></div>
       </div>
 
       <!-- Resumen de filtros -->
-      <div class="summary" id="summaryChips"></div>
+      <div class="summary" id="summaryChips" aria-live="polite"></div>
 
-      <!-- Solo tabla -->
+      <!-- Tabla -->
       <div class="tablewrap" id="viewTabla" role="region" aria-label="Tabla de programación">
         <table>
           <thead>
             <tr>
-              <th>Centro</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Responsable</th>
-              <th>Asistentes</th>
-              <th>Estado</th>
-              <th>Jornada</th>
-              <th>Área</th>
+              <th scope="col">Centro</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Hora</th>
+              <th scope="col">Responsable</th>
+              <th scope="col">Asistentes</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Jornada</th>
+              <th scope="col">Área</th>
             </tr>
           </thead>
           <tbody id="tbodyCentros"></tbody>
         </table>
       </div>
-      <!-- El mensaje de “No hay eventos hoy.” se pinta con CSS cuando el tbody está vacío -->
+      <!-- El mensaje “No hay eventos hoy.” lo pinta el CSS cuando el tbody está vacío -->
     </section>
   </main>
 
