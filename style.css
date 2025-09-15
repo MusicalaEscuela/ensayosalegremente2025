@@ -174,14 +174,6 @@ tbody tr:hover{background:#fcfcff}
 
 .badge{padding:4px 8px;border:1px solid var(--border);border-radius:999px;font-size:11px;background:#fff}
 
-/* Asistentes (chips) */
-.attendees{display:flex;flex-wrap:wrap;gap:6px}
-.attendee{
-  display:inline-block;font-size:11px;line-height:1;
-  padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:#fff
-}
-.attendee.more{background:#eef2ff;border-color:#c7d2fe}
-
 /* Leyenda e impresión */
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .pill{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:#fff}
