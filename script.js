@@ -384,17 +384,6 @@ function filteredRows(){
   return rows;
 }
 
-/* Render chips de asistentes: muestra hasta 3 y “+N” (title con lista completa) */
-function renderAsistentesChips(asistentes){
-  const list = Array.isArray(asistentes) ? asistentes : [];
-  if (list.length === 0) return '<span class="meta">—</span>';
-  const show = list.slice(0,3);
-  const more = list.length - show.length;
-  const chips = show.map(n=>`<span class="attendee">${esc(n)}</span>`).join(' ');
-  const morePill = more>0 ? ` <span class="attendee more" title="${esc(list.join(', '))}">+${more}</span>` : '';
-  return `<div class="attendees">${chips}${morePill}</div>`;
-}
-
 function renderTabla(){
   const body = byId('tbodyCentros'); 
   body.innerHTML = '';
@@ -408,7 +397,6 @@ function renderTabla(){
       <td>${fmtDate(r.fecha||'')}</td>
       <td>${esc(r.hora||'')}</td>
       <td>${esc(r.responsable||'')}</td>
-      <td>${renderAsistentesChips(r.asistentes)}</td>
       <td class="state ${esc(r.estado||'')}">${cap(r.estado||'')}</td>
       <td>${esc(r.jornada||'')}</td>
       <td>${esc(r.area||'')}</td>
@@ -515,4 +503,3 @@ function setText(id, txt){ const el = byId(id); if (el) el.textContent = txt; }
 function setValue(id, val){ const el = byId(id); if (el) el.value = val; }
 function getValue(id){ const el = byId(id); return el ? el.value : ''; }
 function onClick(id, fn){ const el = byId(id); if (el) el.onclick = fn; }
-
